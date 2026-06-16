@@ -8,4 +8,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/app/data
+      - homebox-companion-data:/app/data
+
+volumes:
+  homebox-companion-data:

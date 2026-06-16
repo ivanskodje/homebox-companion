@@ -17,6 +17,21 @@ if TYPE_CHECKING:
     from ...core.persistent_settings import CustomFieldDefinition
 
 
+class BoundingBox(BaseModel):
+    """Approximate normalized location of an item within an image.
+
+    Coordinates are fractions of the image with the origin at the top-left
+    corner. Values are intentionally unconstrained: the vision model may return
+    slightly out-of-range numbers, and rejecting them here would drop the whole
+    item during validation. Consumers clamp the box before use.
+    """
+
+    x: float
+    y: float
+    width: float
+    height: float
+
+
 class DetectedItem(BaseModel):
     """Structured representation for objects detected in an image.
 
@@ -43,6 +58,8 @@ class DetectedItem(BaseModel):
     purchase_price: float | None = Field(default=None, gt=0, alias="purchasePrice")
     purchase_from: Annotated[str, Field(max_length=255)] | None = Field(default=None, alias="purchaseFrom")
     notes: Annotated[str, Field(max_length=1000)] | None = None
+
+    bounding_box: BoundingBox | None = Field(default=None, alias="boundingBox")
 
     def get_extended_fields_payload(self) -> dict[str, str | float] | None:
         """Get extended fields that require an update after item creation.

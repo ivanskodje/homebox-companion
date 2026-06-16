@@ -97,6 +97,7 @@
 
 	function getThumbnail(item: ConfirmedItem): string | null {
 		if (item.customThumbnail) return item.customThumbnail;
+		if (item.compressedDataUrl) return item.compressedDataUrl;
 		if (item.originalFile) return urlManager.getUrl(item.originalFile);
 		return null;
 	}

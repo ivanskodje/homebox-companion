@@ -78,6 +78,14 @@ async def test_multi_item_detection_returns_multiple_items(
     names = [item.name for item in detected_items]
     assert len(names) == len(set(names)), "Item names should be distinct"
 
+    # Bounding boxes are optional, but when present they must be well-formed floats.
+    # That the structured-output call succeeded at all confirms the nested boundingBox
+    # schema is accepted by the model.
+    for item in detected_items:
+        if item.bounding_box is not None:
+            box = item.bounding_box
+            assert all(isinstance(value, float) for value in (box.x, box.y, box.width, box.height))
+
 
 @pytest.mark.asyncio
 async def test_detection_with_tags_assigns_valid_ids(

@@ -45,6 +45,7 @@ from .ai import (
     CapabilityNotSupportedError,
     JSONRepairError,
     LLMServiceError,
+    crop_image_by_normalized_bbox,
     encode_compressed_image_to_base64,
     encode_image_bytes_to_data_uri,
     encode_image_to_data_uri,
@@ -115,4 +116,5 @@ __all__ = [
     "encode_image_to_data_uri",
     "encode_image_bytes_to_data_uri",
     "encode_compressed_image_to_base64",
+    "crop_image_by_normalized_bbox",
 ]

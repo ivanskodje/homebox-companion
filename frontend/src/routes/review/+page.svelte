@@ -90,6 +90,7 @@
 				...(currentItem.additionalImages || []),
 			];
 			allImages = imageArray;
+			originalImageSet = new Set(imageArray);
 			showExtendedFields = hasExtendedFieldData(currentItem);
 			showCustomFields = hasCustomFieldData(currentItem);
 			showImagesPanel = false;
@@ -367,10 +368,12 @@
 		showThumbnailEditor = false;
 	}
 
-	// Derived display thumbnail - custom takes precedence, then first image
+	// Derived display thumbnail - custom takes precedence, then the item's
+	// compressed/cropped image, then the source file
 	const displayThumbnail = $derived.by(() => {
 		if (!editedItem) return null;
 		if (editedItem.customThumbnail) return editedItem.customThumbnail;
+		if (editedItem.compressedDataUrl) return editedItem.compressedDataUrl;
 		if (allImages.length > 0) return urlManager.getUrl(allImages[0]);
 		return null;
 	});

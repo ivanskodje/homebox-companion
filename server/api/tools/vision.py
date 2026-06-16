@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 from typing import Annotated
@@ -12,6 +13,7 @@ from loguru import logger
 
 from homebox_companion import (
     analyze_item_details_from_images,
+    crop_image_by_normalized_bbox,
     detect_items_from_bytes,
     encode_compressed_image_to_base64,
     encode_image_bytes_to_data_uri,
@@ -20,7 +22,7 @@ from homebox_companion import (
 from homebox_companion import (
     correct_item as llm_correct_item,
 )
-from homebox_companion.tools.vision.models import get_custom_fields_dict
+from homebox_companion.tools.vision.models import DetectedItem, get_custom_fields_dict
 
 from ...dependencies import (
     VisionContext,
@@ -207,6 +209,39 @@ async def detect_items(
         )
         for item in detected
     ]
+
+    if not single_item:
+        items_with_boxes = [
+            (item, response)
+            for item, response in zip(detected, response_items, strict=True)
+            if item.bounding_box is not None
+        ]
+        if items_with_boxes:
+            logger.info(f"Cropping {len(items_with_boxes)} item region(s) from the source image")
+
+            async def crop_one(item: DetectedItem, response: DetectedItemResponse) -> None:
+                box = item.bounding_box
+                assert box is not None
+                try:
+                    async with _get_compression_semaphore():
+                        crop_bytes, crop_mime = await asyncio.to_thread(
+                            crop_image_by_normalized_bbox,
+                            image_bytes,
+                            box.x,
+                            box.y,
+                            box.width,
+                            box.height,
+                            max_dimension=max_dimension,
+                            quality=jpeg_quality,
+                        )
+                    response.cropped_image = CompressedImage(
+                        data=base64.b64encode(crop_bytes).decode("ascii"),
+                        mime_type=crop_mime,
+                    )
+                except Exception as e:
+                    logger.warning(f"Per-item crop failed for '{item.name}': {e}")
+
+            await asyncio.gather(*[crop_one(item, response) for item, response in items_with_boxes])
 
     # ==========================================================================
     # DUPLICATE DETECTION: Check items with serial numbers for existing matches

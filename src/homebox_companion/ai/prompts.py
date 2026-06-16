@@ -148,6 +148,30 @@ OPTIONAL FIELDS (include only when visible or user-provided):
 - notes: string or null ({notes_instr})"""
 
 
+def build_bounding_box_schema(single_item: bool) -> str:
+    """Build the per-item bounding box schema section.
+
+    Only requested when separating multiple items in one image, where a box is
+    needed to crop a preview of each item. Returns an empty string in single-item
+    mode so that prompt is unchanged.
+
+    Args:
+        single_item: If True, no bounding box is requested.
+
+    Returns:
+        Bounding box schema string, or empty string in single-item mode.
+    """
+    if single_item:
+        return ""
+    return (
+        "\n- boundingBox: {x, y, width, height} as fractions in [0,1] giving a TIGHT box that "
+        "closely encloses ONLY this item (x, y = top-left corner). Make the box as small as "
+        "possible while still containing the whole item; include minimal surrounding background "
+        "and exclude other items, the table, and empty space. Set to null if one item fills the "
+        "frame or you are unsure."
+    )
+
+
 def build_tag_prompt(tags: list[dict[str, str]] | None) -> str:
     """Build the tag assignment prompt section.
 

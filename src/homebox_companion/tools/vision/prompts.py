@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...ai.prompts import (
+    build_bounding_box_schema,
     build_critical_constraints,
     build_custom_fields_schema,
     build_extended_fields_schema,
@@ -58,6 +59,7 @@ def build_detection_system_prompt(
     custom_schema = build_custom_fields_schema(custom_fields or [])
     naming_examples = build_naming_examples(field_preferences)
     tag_prompt = build_tag_prompt(tags)
+    bbox_schema = build_bounding_box_schema(single_item)
 
     return (
         # 1. Role + output format
@@ -69,6 +71,7 @@ def build_detection_system_prompt(
         f"{critical}\n\n"
         # 4. Schema
         f"{item_schema}"
+        f"{bbox_schema}"
         f"{extended_schema}"
         f"{custom_schema}\n\n"
         # 5. Naming examples
@@ -99,6 +102,8 @@ def build_detection_user_prompt(
     if extract_extended_fields:
         extended_example = ',"manufacturer":"DeWalt","modelNumber":"DCD771C2"'
 
+    bbox_example = "" if single_item else ',"boundingBox":{"x":0.1,"y":0.1,"width":0.3,"height":0.4}'
+
     user_hint = ""
     if extra_instructions and extra_instructions.strip():
         user_hint = (
@@ -120,7 +125,7 @@ def build_detection_user_prompt(
         "List items that are the focus of this image. Return only JSON. "
         "Example: "
         '{"items":[{"name":"Claw Hammer","quantity":2,'
-        f'"description":"Steel claw hammer","tagIds":["id1"]{extended_example}'
+        f'"description":"Steel claw hammer","tagIds":["id1"]{extended_example}{bbox_example}'
         "}]}." + user_hint
     )
 
@@ -157,6 +162,7 @@ def build_multi_image_system_prompt(
     custom_schema = build_custom_fields_schema(custom_fields or [])
     naming_examples = build_naming_examples(field_preferences)
     tag_prompt = build_tag_prompt(tags)
+    bbox_schema = build_bounding_box_schema(single_item)
 
     multi_note = (
         "Analyzing multiple images of the same item."
@@ -174,6 +180,7 @@ def build_multi_image_system_prompt(
         f"{critical}\n\n"
         # 4. Schema
         f"{item_schema}"
+        f"{bbox_schema}"
         f"{extended_schema}"
         f"{custom_schema}\n\n"
         # 5. Naming examples

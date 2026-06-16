@@ -33,6 +33,13 @@ class DuplicateMatchResponse(BaseModel):
     location_name: str | None = None
 
 
+class CompressedImage(BaseModel):
+    """Compressed image data for Homebox upload."""
+
+    data: str = Field(description="Base64-encoded compressed image")
+    mime_type: str = Field(description="MIME type (typically 'image/jpeg')")
+
+
 class DetectedItemResponse(ItemBaseMixin, ItemExtendedFieldsMixin):
     """Detected item from image analysis."""
 
@@ -40,13 +47,7 @@ class DetectedItemResponse(ItemBaseMixin, ItemExtendedFieldsMixin):
     custom_fields: dict[str, str] | None = None
     # Duplicate detection - populated if serial number matches an existing item
     duplicate_match: DuplicateMatchResponse | None = None
-
-
-class CompressedImage(BaseModel):
-    """Compressed image data for Homebox upload."""
-
-    data: str = Field(description="Base64-encoded compressed image")
-    mime_type: str = Field(description="MIME type (typically 'image/jpeg')")
+    cropped_image: CompressedImage | None = None
 
 
 class DetectionResponse(BaseModel):

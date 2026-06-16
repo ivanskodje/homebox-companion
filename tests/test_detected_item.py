@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from homebox_companion.tools.vision.models import DetectedItem
+from homebox_companion.tools.vision.models import BoundingBox, DetectedItem
 
 # All tests in this module are pure unit tests
 pytestmark = pytest.mark.unit
@@ -104,3 +104,46 @@ class TestPydanticValidation:
         )
         assert item.name == "Valid Item"
         assert item.quantity == 1
+
+
+class TestBoundingBox:
+    """Test the optional per-item bounding box used for cropping previews."""
+
+    def test_absent_by_default(self) -> None:
+        """An item without a box should have bounding_box None."""
+        item = DetectedItem(name="Item", quantity=1)
+
+        assert item.bounding_box is None
+
+    def test_populated_via_camelcase_alias(self) -> None:
+        """The LLM returns camelCase boundingBox, which should populate bounding_box."""
+        item = DetectedItem.model_validate(
+            {"name": "Item", "quantity": 1, "boundingBox": {"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}}
+        )
+
+        assert item.bounding_box is not None
+        assert item.bounding_box.x == 0.1
+        assert item.bounding_box.width == 0.3
+
+    def test_out_of_range_values_are_accepted(self) -> None:
+        """Out-of-range coordinates must not raise, or a bad box would drop the whole item."""
+        item = DetectedItem.model_validate(
+            {"name": "Item", "quantity": 1, "boundingBox": {"x": -0.1, "y": 1.5, "width": 1.2, "height": 0.4}}
+        )
+
+        assert item.bounding_box is not None
+        assert item.bounding_box.y == 1.5
+
+    def test_box_not_in_extended_fields_payload(self) -> None:
+        """The box must never leak into the Homebox update payload."""
+        item = DetectedItem.model_validate(
+            {"name": "Item", "quantity": 1, "boundingBox": {"x": 0.1, "y": 0.1, "width": 0.5, "height": 0.5}}
+        )
+
+        assert item.get_extended_fields_payload() is None
+
+    def test_model_accepts_plain_floats(self) -> None:
+        """BoundingBox is a simple container of normalized floats."""
+        box = BoundingBox(x=0.0, y=0.0, width=1.0, height=1.0)
+
+        assert (box.x, box.y, box.width, box.height) == (0.0, 0.0, 1.0, 1.0)

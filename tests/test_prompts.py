@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from homebox_companion.ai.prompts import (
+    build_bounding_box_schema,
     build_critical_constraints,
     build_extended_fields_schema,
     build_item_schema,
@@ -13,6 +14,7 @@ from homebox_companion.ai.prompts import (
     build_tag_prompt,
 )
 from homebox_companion.core.field_preferences import get_defaults
+from homebox_companion.tools.vision.prompts import build_detection_system_prompt
 
 # All tests in this module are pure unit tests
 pytestmark = pytest.mark.unit
@@ -309,3 +311,36 @@ class TestPromptStructureProperties:
         build_item_schema(empty_customizations)
         build_extended_fields_schema(empty_customizations)
         build_naming_examples(empty_customizations)
+
+
+class TestBuildBoundingBoxSchema:
+    """Test the gated per-item bounding box schema."""
+
+    def test_single_item_returns_empty(self) -> None:
+        """Single-item mode requests no bounding box."""
+        assert build_bounding_box_schema(single_item=True) == ""
+
+    def test_separate_items_requests_box(self) -> None:
+        """Separate-items mode asks for a tight boundingBox around only this item."""
+        result = build_bounding_box_schema(single_item=False)
+
+        assert "boundingBox" in result
+        assert "x, y, width, height" in result
+        assert "tight" in result.lower()
+        assert "only this item" in result.lower()
+
+
+class TestDetectionPromptBoundingBox:
+    """The bounding box is wired into the detection prompt only when separating."""
+
+    def test_separate_mode_includes_bounding_box(self) -> None:
+        """Separate-items detection prompt should request a boundingBox."""
+        prompt = build_detection_system_prompt(single_item=False)
+
+        assert "boundingBox" in prompt
+
+    def test_single_mode_excludes_bounding_box(self) -> None:
+        """Single-item detection prompt should be unchanged (no boundingBox)."""
+        prompt = build_detection_system_prompt(single_item=True)
+
+        assert "boundingBox" not in prompt

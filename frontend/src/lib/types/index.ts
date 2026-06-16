@@ -274,6 +274,8 @@ export interface DetectedItem extends ItemCore, ItemExtended {
 	custom_fields?: Record<string, string> | null;
 	/** Duplicate match info if serial matches an existing item */
 	duplicate_match?: DuplicateMatch | null;
+	/** Per-item cropped image from separate-items mode; used as the item's primary upload image */
+	cropped_image?: CompressedImage;
 }
 
 /** Details of an existing item that matches a detected item's serial number */

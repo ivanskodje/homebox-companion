@@ -1,0 +1,11 @@
+services:
+  homebox-companion:
+    build: .
+    image: homebox-companion:local
+    container_name: homebox-companion
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data

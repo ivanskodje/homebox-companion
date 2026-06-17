@@ -17,6 +17,7 @@ Environment Variables:
     HBC_LLM_ALLOW_UNSAFE_MODELS: If true, allow models not in the curated allowlist (best-effort)
     HBC_LLM_TIMEOUT: LLM request timeout in seconds (default: 120)
     HBC_LLM_STREAM_TIMEOUT: LLM streaming timeout in seconds (default: 300)
+    HBC_LLM_REASONING_EFFORT: Reasoning effort for gpt-5-family extraction (default: low)
     HBC_SERVER_HOST: Host to bind the web server to (default: 0.0.0.0)
     HBC_SERVER_PORT: Port for the web server (default: 8000). In production,
         this single port serves both the API and the static frontend.
@@ -116,6 +117,9 @@ class Settings(BaseSettings):
     llm_timeout: int = 120
     # LLM streaming timeout (in seconds) - longer for large responses
     llm_stream_timeout: int = 300
+    # LLM reasoning effort for structured extraction on gpt-5 family models.
+    # Lower effort makes vision detection far faster; empty string omits the param.
+    llm_reasoning_effort: str = "low"
 
     # Demo mode - enables pre-filled credentials for demo deployments
     demo_mode: bool = False

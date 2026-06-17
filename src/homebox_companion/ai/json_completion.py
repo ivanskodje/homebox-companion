@@ -207,6 +207,8 @@ def _build_completion_kwargs(
     }
     if response_format:
         kwargs["response_format"] = response_format
+    if config.settings.llm_reasoning_effort:
+        kwargs["reasoning_effort"] = config.settings.llm_reasoning_effort
     return kwargs
 
 
